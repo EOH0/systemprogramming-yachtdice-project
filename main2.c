@@ -7,8 +7,8 @@
 #include <string.h>
 #include <form.h>
 
-#define WIDTH 40
-#define HEIGHT 20
+#define WIDTH 150
+#define HEIGHT 50
 #define MAX_LEN 300
 
 volatile sig_atomic_t quit_requested = 0;
@@ -200,10 +200,35 @@ void mainscene(char** menulist){
             break;
     }
 }
+void sceneFrame() {
+    for (int x = 0; x < WIDTH; x++) {
+        for (int y = 0; y < HEIGHT; y++) {
+            if (x == 0 || x == WIDTH - 1) {
+                mvprintw(y, x, "|");
+            }
+            else if (y == 0 || y == HEIGHT - 1) {
+                mvprintw(y, x, "-");
+            }
+        }
+    }
+}
+void scoreBoard(char** playerlist) {
+    for (int x = 1; x <= 20; x++) {
+        for (int y = 1; y < HEIGHT - 1; y++) {
+            if (x == 1 || x == 20) {
+                mvprintw(y, x, "|");
+            }
+            else if (y == 1 || y == HEIGHT - 2) {
+                mvprintw(y, x, "-");
+            }
+        }
+    }
+}
 void scene1(char** playerlist, char* button){
-    //menuV(1,menusize,playerlist,100 - 45,15);
     //visual area
-    inputV(cachetext,30,26);
+    sceneFrame();
+    scoreBoard(playerlist);
+    // inputV(cachetext,30,26);
     
     switch(preem_handle){
         case 0:
@@ -237,6 +262,7 @@ int main(){
     //start
     char* menulist[4] = {"SinglePlayer","MultiPlayer","Network Play","Change Nickname"};
     char button[2] = {'p','b'};
+    char* playerlist[4] = {"1p", "2p", "3p", "4p"};
     //update
     while(!game_over){
         if (quit_requested) { //ctrl c
