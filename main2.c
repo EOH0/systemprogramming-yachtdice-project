@@ -6,6 +6,7 @@
 #include <math.h>
 #include <string.h>
 #include <form.h>
+#include <stdlib.h>
 
 #define WIDTH 150
 #define HEIGHT 50
@@ -18,8 +19,10 @@ int game_over = 0;
 int score = 0;
 int paused = 0;
 int max_x, max_y;
+int dice_row = 28;
 
 char nickname[100] = "Player";
+int diceVal[5] = {0, 0, 0, 0, 0};
 
 /* Control variables */
 //menu entry general number
@@ -201,8 +204,8 @@ void mainscene(char** menulist){
     }
 }
 void sceneFrame() {
-    for (int x = 0; x < WIDTH; x++) {
-        for (int y = 0; y < HEIGHT; y++) {
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
             if (x == 0 || x == WIDTH - 1) {
                 mvprintw(y, x, "|");
             }
@@ -213,8 +216,8 @@ void sceneFrame() {
     }
 }
 void scoreBoard(char** playerlist) {
-    for (int x = 1; x <= 20; x++) {
-        for (int y = 1; y < HEIGHT - 1; y++) {
+    for (int y = 1; y <= HEIGHT - 1; y++) {
+        for (int x = 1; x <= 20; x++) {
             if (x == 1 || x == 20) {
                 mvprintw(y, x, "|");
             }
@@ -223,11 +226,72 @@ void scoreBoard(char** playerlist) {
             }
         }
     }
+    mvprintw(2, 3, "Ones");
+    mvprintw(3, 5, ": ");
+    mvprintw(4, 3, "Twos");
+    mvprintw(5, 5, ": ");
+    mvprintw(6, 3, "Threes");
+    mvprintw(7, 5, ": ");
+    mvprintw(8, 3, "Fours");
+    mvprintw(9, 5, ": ");
+    mvprintw(10, 3, "Fives");
+    mvprintw(11, 5, ": ");
+    mvprintw(12, 3, "Sixes");
+    mvprintw(13, 5, ": ");
+    mvprintw(14, 3, "(Homework)");
+    mvprintw(15, 5, ": ");
+    mvprintw(16, 3, "Choice");
+    mvprintw(17, 5, ": ");
+    mvprintw(18, 3, "Fourofakind");
+    mvprintw(19, 5, ": ");
+    mvprintw(20, 3, "FullHouse");
+    mvprintw(21, 5, ": ");
+    mvprintw(22, 3, "SmallStraight");
+    mvprintw(23, 5, ": ");
+    mvprintw(24, 3, "LargeStraight");
+    mvprintw(25, 5, ": ");
+    mvprintw(26, 3, "YACHT");
+    mvprintw(27, 5, ": ");
+    // 점수판 밑으로 20칸 여유있음
+}
+void rollDices() {
+    for (int i = 0; i < 5; i++) {
+        diceVal[i] = rand() % 6 + 1;
+    }
+}
+void printDice(int dVal, int row) {
+    switch (dVal) {
+        case 1:
+            // for (int i = 0; i <)
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        default:
+            break;
+    }
 }
 void scene1(char** playerlist, char* button){
     //visual area
     sceneFrame();
     scoreBoard(playerlist);
+
+    for(int i = 0; i < 5; i++) {
+        // mvprintw(row + i, 3, "%d", diceVal[i]);
+        printDice(diceVal[i], dice_row);
+    }
+
+    char roll = getch();
+    if(roll == 'f') {
+        rollDices();
+    }
     // inputV(cachetext,30,26);
     
     switch(preem_handle){
