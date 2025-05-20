@@ -258,6 +258,7 @@ void rollDices() {
     }
 }
 void printDiceFrame(int x_end, int y_end, int row, int diceV) {
+    int flag = diceVal[0] * diceVal[1] * diceVal[2] * diceVal[3] * diceVal[4];
     for (int x = 2; x <= x_end; x++) {
         for (int y = 0; y <= y_end; y++) {
             int cur_y = row + y;
@@ -268,10 +269,59 @@ void printDiceFrame(int x_end, int y_end, int row, int diceV) {
             } else if ((y == 0 || y == y_end) && (x == 2 || x == x_end)) {
                 mvprintw(cur_y, x, "+");
             }
-            if (x == x_end / 2 && y == y_end / 2) {
-                mvprintw(cur_y, x + 1, "%d", diceV);
-            }
+        }    
+    }
+    if (flag) {
+        int tempRow = row + 1;
+        int col = 3;
+        switch (diceV) {
+        case 1:
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "     O     ");
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "           ");
+            break;
+        case 2:
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "  O        ");
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "        O  ");
+            mvprintw(tempRow++, col, "           ");
+            break;
+        case 3:
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "  O        ");
+            mvprintw(tempRow++, col, "     O     ");
+            mvprintw(tempRow++, col, "        O ");
+            mvprintw(tempRow++, col, "           ");
+            break;
+        case 4:
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "  O     O  ");
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "  O     O  ");
+            mvprintw(tempRow++, col, "           ");
+            break;
+        case 5:
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "  O     O  ");
+            mvprintw(tempRow++, col, "     O     ");
+            mvprintw(tempRow++, col, "  O     O  ");
+            mvprintw(tempRow++, col, "           ");
+            break;
+        case 6:
+            mvprintw(tempRow++, col, "           ");
+            mvprintw(tempRow++, col, "  O     O  ");
+            mvprintw(tempRow++, col, "  O     O  ");
+            mvprintw(tempRow++, col, "  O     O  ");
+            mvprintw(tempRow++, col, "           ");
+            break;
         }
+        // if (x == x_end / 2 && y == y_end / 2) {
+            // 주사위 내부 가로 11칸, 세로 5칸
+            // mvprintw(cur_y, x + 1, "%d", diceV); // 주사위 값 출력
+        //  }
     }
     refresh();
 }
@@ -286,7 +336,6 @@ void scene1(char** playerlist, char* button){
     sceneFrame();
     scoreBoard(playerlist);
 
-    int flag = diceVal[0] * diceVal[1] * diceVal[2] * diceVal[3] * diceVal[4];
     int tempRow = dice_row;
     for(int i = 0; i < 5; i++) {
         // mvprintw(tempRow + i, 27, "%d", diceVal[i]); // 주사위 값 체크하는 문장
