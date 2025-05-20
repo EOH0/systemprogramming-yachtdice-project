@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 #define WIDTH 150
-#define HEIGHT 50
+#define HEIGHT 52
 #define MAX_LEN 300
 
 volatile sig_atomic_t quit_requested = 0;
@@ -19,7 +19,7 @@ int game_over = 0;
 int score = 0;
 int paused = 0;
 int max_x, max_y;
-int dice_row = 28;
+int dice_row = 15;
 
 char nickname[100] = "Player";
 int diceVal[5] = {0, 0, 0, 0, 0};
@@ -81,7 +81,6 @@ void init_game(){
     signal(SIGINT, quit_check);
     signal(SIGTSTP, paused_check);
 }
-
 
 /* Entries */
 //메뉴 엔트리
@@ -179,7 +178,7 @@ void mainscene(char** menulist){
         "             88888888Y\"'    88    `\"Y8888Y\"'   88888888888  \n"
         "                                               \n"
     );
-    
+    refresh();
     
     mvprintw(25,4,"Player Name :");
     menuV(0,4,menulist,100 - 45,26);
@@ -206,7 +205,10 @@ void mainscene(char** menulist){
 void sceneFrame() {
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
-            if (x == 0 || x == WIDTH - 1) {
+            if ((x == 0 || x == WIDTH - 1) && (y == 0 || y == HEIGHT - 1)) {
+                mvprintw(y, x, "+");
+            }
+            else if (x == 0 || x == WIDTH - 1) {
                 mvprintw(y, x, "|");
             }
             else if (y == 0 || y == HEIGHT - 1) {
@@ -214,11 +216,16 @@ void sceneFrame() {
             }
         }
     }
+    refresh();
 }
+
 void scoreBoard(char** playerlist) {
-    for (int y = 1; y <= HEIGHT - 1; y++) {
-        for (int x = 1; x <= 20; x++) {
-            if (x == 1 || x == 20) {
+    for (int y = 1; y <= HEIGHT - 2; y++) {
+        for (int x = 1; x <= 24; x++) {
+            if ((x == 1 || x == 24) && (y == 1 || y == HEIGHT - 2)) {
+                mvprintw(y, x, "+");
+            }
+            else if (x == 1 || x == 24) {
                 mvprintw(y, x, "|");
             }
             else if (y == 1 || y == HEIGHT - 2) {
@@ -226,70 +233,70 @@ void scoreBoard(char** playerlist) {
             }
         }
     }
-    mvprintw(2, 3, "Ones");
-    mvprintw(3, 5, ": ");
-    mvprintw(4, 3, "Twos");
-    mvprintw(5, 5, ": ");
-    mvprintw(6, 3, "Threes");
-    mvprintw(7, 5, ": ");
-    mvprintw(8, 3, "Fours");
-    mvprintw(9, 5, ": ");
-    mvprintw(10, 3, "Fives");
-    mvprintw(11, 5, ": ");
-    mvprintw(12, 3, "Sixes");
-    mvprintw(13, 5, ": ");
-    mvprintw(14, 3, "(Homework)");
-    mvprintw(15, 5, ": ");
-    mvprintw(16, 3, "Choice");
-    mvprintw(17, 5, ": ");
-    mvprintw(18, 3, "Fourofakind");
-    mvprintw(19, 5, ": ");
-    mvprintw(20, 3, "FullHouse");
-    mvprintw(21, 5, ": ");
-    mvprintw(22, 3, "SmallStraight");
-    mvprintw(23, 5, ": ");
-    mvprintw(24, 3, "LargeStraight");
-    mvprintw(25, 5, ": ");
-    mvprintw(26, 3, "YACHT");
-    mvprintw(27, 5, ": ");
-    // 점수판 밑으로 20칸 여유있음
+    refresh();
+
+    // mvprintw(3, 5, ": ");
+    mvprintw(2, 3, "Ones");           mvprintw(2, 17, ":");
+    mvprintw(3, 3, "Twos");           mvprintw(3, 17, ":");
+    mvprintw(4, 3, "Threes");         mvprintw(4, 17, ":");
+    mvprintw(5, 3, "Fours");          mvprintw(5, 17, ":");
+    mvprintw(6, 3, "Fives");          mvprintw(6, 17, ":");
+    mvprintw(7, 3, "Sixes");          mvprintw(7, 17, ":");
+    mvprintw(8, 3, "(Homework)");     mvprintw(8, 17, ":");
+    mvprintw(9, 3, "Choice");         mvprintw(9, 17, ":");
+    mvprintw(10, 3, "Fourofakind");   mvprintw(10, 17, ":");
+    mvprintw(11, 3, "FullHouse");     mvprintw(11, 17, ":");
+    mvprintw(12, 3, "SmallStraight"); mvprintw(12, 17, ":");
+    mvprintw(13, 3, "LargeStraight"); mvprintw(13, 17, ":");
+    mvprintw(14, 3, "YACHT");         mvprintw(14, 17, ":");
+    refresh();
+    // 점수판 밑으로 33칸 여유있음 가로는 22칸
 }
 void rollDices() {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++)  {
         diceVal[i] = rand() % 6 + 1;
     }
 }
-void printDice(int dVal, int row) {
-    switch (dVal) {
-        case 1:
-            // for (int i = 0; i <)
-            break;
-        case 2:
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
-        case 5:
-            break;
-        case 6:
-            break;
-        default:
-            break;
+void printDiceFrame(int x_end, int y_end, int row, int diceV) {
+    for (int x = 2; x <= x_end; x++) {
+        for (int y = 0; y <= y_end; y++) {
+            int cur_y = row + y;
+            if ((x == 2 || x == x_end) && (y !=  0 && y != y_end)) {
+                mvprintw(cur_y, x, "|");
+            } else if ((y == 0 || y == y_end) && (x != 2 && x != x_end)) {
+                mvprintw(cur_y, x, "-");
+            } else if ((y == 0 || y == y_end) && (x == 2 || x == x_end)) {
+                mvprintw(cur_y, x, "+");
+            }
+            if (x == x_end / 2 && y == y_end / 2) {
+                mvprintw(cur_y, x + 1, "%d", diceV);
+            }
+        }
     }
+    refresh();
+}
+void printDice(int row, int diceV) {
+    refresh();
+    int x_end = 14;
+    int y_end = 6;
+    printDiceFrame(x_end, y_end, row, diceV);
 }
 void scene1(char** playerlist, char* button){
     //visual area
     sceneFrame();
     scoreBoard(playerlist);
 
+    int flag = diceVal[0] * diceVal[1] * diceVal[2] * diceVal[3] * diceVal[4];
+    int tempRow = dice_row;
     for(int i = 0; i < 5; i++) {
-        // mvprintw(row + i, 3, "%d", diceVal[i]);
-        printDice(diceVal[i], dice_row);
+        // mvprintw(tempRow + i, 27, "%d", diceVal[i]); // 주사위 값 체크하는 문장
+        printDice(tempRow + i, diceVal[i]);
+        tempRow += 6;
     }
+    
 
     char roll = getch();
-    if(roll == 'f') {
+    if(roll == 'f') { // f 누르면 주사위 굴림
         rollDices();
     }
     // inputV(cachetext,30,26);
@@ -318,6 +325,7 @@ void scene1(char** playerlist, char* button){
                 preem_handle = 1;
             }*/
 }
+
 
 /* main core process */
 int main(){
