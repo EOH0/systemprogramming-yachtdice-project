@@ -6,7 +6,6 @@
 #include <math.h>
 #include <string.h>
 #include <form.h>
-#include <stdlib.h>
 
 #define WIDTH 150
 #define HEIGHT 52
@@ -20,9 +19,13 @@ int score = 0;
 int paused = 0;
 int max_x, max_y;
 int dice_row = 15;
+int diceTimes = 0; // 주사위 굴림 횟수수
+int flag = 0;
 
 char nickname[100] = "Player";
 int diceVal[5] = {0, 0, 0, 0, 0};
+int sortedDice[5];
+int diceCombination[13] = { 0 };
 
 /* Control variables */
 //menu entry general number
@@ -218,7 +221,62 @@ void sceneFrame() {
     }
     refresh();
 }
-
+void diceSort() {
+    for (int i = 0; i < 5; i++) {
+        for (int j = i; j < 5; j++) {
+            if (sortedDice[i] > sortedDice[j]) {
+                int t = sortedDice[i];
+                sortedDice[i] = sortedDice[j];
+                sortedDice[j] = t;
+            }
+        }
+    }
+}
+void calculDiceVal() {
+    diceSort();
+    for (int i = 0; i < 13; i++) { // 족보 값을 저장하는 cardCombination의 인덱스
+        if (i < 6) { // 1 ~ 6
+            int numSum = 0;
+            for (int j = 0; j < 5; j++) {
+                if (sortedDice[j] == i + 1) {
+                    numSum += i + 1;
+                }
+                diceCombination[i] = numSum;
+            }
+        }
+        else if (i == 6) { // 숙제
+            int HWSum = 0;
+            for (int j = 0; j < 5; j++) {
+                HWSum += diceCombination[j];
+            }
+            if (HWSum >= 63) {
+                int HWScore = 35;
+                diceCombination[i] = HWScore;
+            }
+        }
+        else if (i > 6) {
+            switch (i) {
+            case 7: // choice
+                int choiceSum = 0;
+                for (int j = 0; j < 5; j++) {
+                    choiceSum += sortedDice[j];
+                }
+                diceCombination[7] = choiceSum;
+                break;
+            case 8: // Four of a kind
+                if ((sortedDice[0] == sortedDice[1] && sortedDice[1] == sortedDice[2] && sortedDice[2] == sortedDice[3]) ||
+                    (sortedDice[1] == sortedDice[2] && sortedDice[2] == sortedDice[3] && sortedDice[3] == sortedDice[4])) {
+                    diceCombination[i] = sortedDice[2] * 4;  // 4개의 값이 모두 같으므로 중간값 사용
+                } else {
+                    diceCombination[i] = 0;
+                }
+                break;
+            case 9: // Full House
+                break;
+            }
+        }
+    }
+}
 void scoreBoard(char** playerlist) {
     for (int y = 1; y <= HEIGHT - 2; y++) {
         for (int x = 1; x <= 24; x++) {
@@ -234,31 +292,32 @@ void scoreBoard(char** playerlist) {
         }
     }
     refresh();
+    if (flag) calculDiceVal();
 
     // mvprintw(3, 5, ": ");
-    mvprintw(2, 3, "Ones");           mvprintw(2, 17, ":");
-    mvprintw(3, 3, "Twos");           mvprintw(3, 17, ":");
-    mvprintw(4, 3, "Threes");         mvprintw(4, 17, ":");
-    mvprintw(5, 3, "Fours");          mvprintw(5, 17, ":");
-    mvprintw(6, 3, "Fives");          mvprintw(6, 17, ":");
-    mvprintw(7, 3, "Sixes");          mvprintw(7, 17, ":");
-    mvprintw(8, 3, "(Homework)");     mvprintw(8, 17, ":");
-    mvprintw(9, 3, "Choice");         mvprintw(9, 17, ":");
-    mvprintw(10, 3, "Fourofakind");   mvprintw(10, 17, ":");
-    mvprintw(11, 3, "FullHouse");     mvprintw(11, 17, ":");
-    mvprintw(12, 3, "SmallStraight"); mvprintw(12, 17, ":");
-    mvprintw(13, 3, "LargeStraight"); mvprintw(13, 17, ":");
-    mvprintw(14, 3, "YACHT");         mvprintw(14, 17, ":");
+    mvprintw(2, 3,  "Ones");           mvprintw(2, 17,  ": %d", diceCombination[0]);
+    mvprintw(3, 3,  "Twos");           mvprintw(3, 17,  ": %d", diceCombination[1]);
+    mvprintw(4, 3,  "Threes");         mvprintw(4, 17,  ": %d", diceCombination[2]);
+    mvprintw(5, 3,  "Fours");          mvprintw(5, 17,  ": %d", diceCombination[3]);
+    mvprintw(6, 3,  "Fives");          mvprintw(6, 17,  ": %d", diceCombination[4]);
+    mvprintw(7, 3,  "Sixes");          mvprintw(7, 17,  ": %d", diceCombination[5]);
+    mvprintw(8, 3,  "(Homework)");     mvprintw(8, 17,  ": %d", diceCombination[6]);
+    mvprintw(9, 3,  "Choice");         mvprintw(9, 17,  ": %d", diceCombination[7]);
+    mvprintw(10, 3, "Fourofakind");    mvprintw(10, 17, ": %d", diceCombination[8]);
+    mvprintw(11, 3, "FullHouse");      mvprintw(11, 17, ": %d", diceCombination[9]);
+    mvprintw(12, 3, "SmallStraight");  mvprintw(12, 17, ": %d", diceCombination[10]);
+    mvprintw(13, 3, "LargeStraight");  mvprintw(13, 17, ": %d", diceCombination[11]);
+    mvprintw(14, 3, "YACHT");          mvprintw(14, 17, ": %d", diceCombination[12]);
     refresh();
     // 점수판 밑으로 33칸 여유있음 가로는 22칸
 }
 void rollDices() {
     for (int i = 0; i < 5; i++)  {
         diceVal[i] = rand() % 6 + 1;
+        sortedDice[i] = diceVal[i];
     }
 }
 void printDiceFrame(int x_end, int y_end, int row, int diceV) {
-    int flag = diceVal[0] * diceVal[1] * diceVal[2] * diceVal[3] * diceVal[4];
     for (int x = 2; x <= x_end; x++) {
         for (int y = 0; y <= y_end; y++) {
             int cur_y = row + y;
@@ -337,16 +396,18 @@ void scene1(char** playerlist, char* button){
     scoreBoard(playerlist);
 
     int tempRow = dice_row;
+    flag = diceVal[0] * diceVal[1] * diceVal[2] * diceVal[3] * diceVal[4];
+    
     for(int i = 0; i < 5; i++) {
-        // mvprintw(tempRow + i, 27, "%d", diceVal[i]); // 주사위 값 체크하는 문장
+        // mvprintw(tempRow + i, 27, "%d", sortedDice[i]); // 주사위 값 체크하는 문장
         printDice(tempRow + i, diceVal[i]);
         tempRow += 6;
     }
     
-
     char roll = getch();
-    if(roll == 'f') { // f 누르면 주사위 굴림
+    if(roll == 'f') { // f 누르면 주사위 굴림, 인당 두번까지
         rollDices();
+        // diceTimes += 1;
     }
     // inputV(cachetext,30,26);
     
