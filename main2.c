@@ -74,7 +74,7 @@ void init_game(){
     initscr();
     noecho();
     curs_set(0);
-    timeout(100);
+    // timeout(100);
     srand(time(NULL));
 
     //초기값 셋팅
@@ -272,7 +272,16 @@ void calculDiceVal() {
                 }
                 break;
             case 8: // Full House
-                
+                for (int i = 1; i <= 6; i++) {
+                    for (int j = 1; j <= 6; j++) {
+                        if ((diceCnt[i] == 3 && diceCnt[j] == 2) || (diceCnt[i] == 2 && diceCnt[j] == 3)) {
+                            diceCombination[ci] == i * 3 + j * 2;
+                            break;
+                        }
+                    }
+                }
+                break;
+            case 9:
                 break;
             }
         }
@@ -308,6 +317,7 @@ void scoreBoard(char** playerlist) {
     mvprintw(11, 3, "SmallStraight");  mvprintw(11, 17, ": %d", diceCombination[9]);
     mvprintw(12, 3, "LargeStraight");  mvprintw(12, 17, ": %d", diceCombination[10]);
     mvprintw(13, 3, "YACHT");          mvprintw(13, 17, ": %d", diceCombination[11]);
+    mvprintw(13, 21, "%d %d %d %d %d %d", diceCnt[1], diceCnt[2], diceCnt[3], diceCnt[4], diceCnt[5], diceCnt[6]);
     refresh();
 }
 void rollDices() {
