@@ -10,6 +10,9 @@
 #define WIDTH 136
 #define HEIGHT 51 // 136:102 = 4:3 cmd 비율 고려 1/2
 #define MAX_LEN 300
+#define SSVAL 15
+#define LSVAL 30
+#define YACHTVAL 50
 
 volatile sig_atomic_t quit_requested = 0;
 volatile sig_atomic_t pause_requested = 0;
@@ -21,6 +24,7 @@ int max_x, max_y;
 int dice_row = 14;
 int diceTimes = 0; // 주사위 굴림 횟수
 int flag = 0;
+int cnt = 0;
 
 char nickname[100] = "Player";
 int diceVal[5] = {0, 0, 0, 0, 0};
@@ -81,7 +85,7 @@ void init_game(){
     getmaxyx(stdscr, max_y, max_x);
 
     //인터럽트 셋팅
-    signal(SIGWINCH, handle_resize);
+    signal(SIGWINCH, handle_resize); // <<-- 이거 필요한가요?
     signal(SIGINT, quit_check);
     signal(SIGTSTP, paused_check);
 }
@@ -275,22 +279,78 @@ void calculDiceVal() {
                 diceCombination[cali] = FoK;
                 break;
             case 8: // Full House
+                int FH = 0;
                 for (int i = 1; i <= 6; i++) {
                     for (int j = 1; j <= 6; j++) {
                         if ((diceCnt[i] == 3 && diceCnt[j] == 2) || (diceCnt[i] == 2 && diceCnt[j] == 3)) {
-                            diceCombination[cali] == i * 3 + j * 2;
+                            FH = i * 3 + j * 2;
                             break;
                         }
                     }
                 }
+                diceCombination[cali] = FH;
                 break;
-            case 9:
+            case 9: // SmallStraight
+                int SS = 0;
+                int SSmul;
+                if (diceCnt[1] == 0 || diceCnt[2] == 0) {
+                    SSmul = diceCnt[3];
+                    for (int i = 4; i <= 6; i++) {
+                        SSmul *= diceCnt[i];
+                    }
+                }
+                else if (diceCnt[1] == 0 || diceCnt[6] == 0) {
+                    SSmul = diceCnt[2];
+                    for (int i = 3; i <= 5; i++) {
+                        SSmul *= diceCnt[i];
+                    }
+                }
+                else if (diceCnt[5] == 0 || diceCnt[6] == 0) {
+                    SSmul = diceCnt[1];
+                    for (int i = 1; i <= 4; i++) {
+                        SSmul *= diceCnt[i];
+                    }
+                }
+                if (SSmul == 1) {
+                    SS = SSVAL;
+                }
+                diceCombination[cali] = SS;
+                break;
+            case 10: // LargeStraight
+                int LS = 0; int LSflag = 0;
+                int LSmul = 1;
+                if (diceCnt[1] == 0) {
+                    for (int i = 2; i <= 6; i++) {
+                        LSmul *= diceCnt[i];
+                        LSflag = 1;
+                    }
+                }
+                else if (diceCnt[6] == 0) {
+                    for (int i = 1; i <= 5; i++) {
+                        LSmul *= diceCnt[i];
+                        LSflag = 1;
+                    }
+                }
+                if (LSmul == 1 && LSflag) {
+                    LS = LSVAL;
+                }
+                // mvprintw(13, 45, "%d %d", LS, LSmul);
+                diceCombination[cali] = LS;
+                break;
+            case 11:
+                int yacht = 0;
+                for (int i = 1; i <= 6; i++) {
+                    if (diceCnt[i] == 5) {
+                        yacht = YACHTVAL;
+                    }
+                }
+                diceCombination[cali] = yacht;
                 break;
             }
         }
     }
 }
-void scoreBoard(char** playerlist) {
+void mainScoreBoard() {
     for (int y = 1; y <= HEIGHT - 2; y++) {
         for (int x = 1; x <= 24; x++) {
             if ((x == 1 || x == 24) && (y == 1 || y == HEIGHT - 2)) {
@@ -314,13 +374,23 @@ void scoreBoard(char** playerlist) {
     mvprintw(5, 3,  "Fours");          mvprintw(5, 17,  ": %d", diceCombination[3]);
     mvprintw(6, 3,  "Fives");          mvprintw(6, 17,  ": %d", diceCombination[4]);
     mvprintw(7, 3,  "Sixes");          mvprintw(7, 17,  ": %d", diceCombination[5]);
-    mvprintw(8, 3,  "Choice");     mvprintw(8, 17,  ": %d", diceCombination[6]);
-    mvprintw(9, 3, "Fourofakind");    mvprintw(9, 17, ": %d", diceCombination[7]);
+    mvprintw(8, 3,  "Choice");         mvprintw(8, 17,  ": %d", diceCombination[6]);
+    mvprintw(9, 3, "Fourofakind");     mvprintw(9, 17, ": %d", diceCombination[7]);
     mvprintw(10, 3, "FullHouse");      mvprintw(10, 17, ": %d", diceCombination[8]);
     mvprintw(11, 3, "SmallStraight");  mvprintw(11, 17, ": %d", diceCombination[9]);
     mvprintw(12, 3, "LargeStraight");  mvprintw(12, 17, ": %d", diceCombination[10]);
     mvprintw(13, 3, "YACHT");          mvprintw(13, 17, ": %d", diceCombination[11]);
-    mvprintw(13, 21, "%d %d %d %d %d %d", diceCnt[1], diceCnt[2], diceCnt[3], diceCnt[4], diceCnt[5], diceCnt[6]);
+    // mvprintw(13, 21, "%d %d %d %d %d %d", diceCnt[1], diceCnt[2], diceCnt[3], diceCnt[4], diceCnt[5], diceCnt[6]); // 주사위 눈금별 주사위 개수
+    // if (diceCombination[10] != 0 || (diceCnt[1] == 1 && diceCnt[2] == 1 && diceCnt[3] == 1 && diceCnt[4] == 1 && diceCnt[5] == 1) || (diceCnt[2] == 1 && diceCnt[3] == 1 && diceCnt[4] == 1 && diceCnt[5] == 1 && diceCnt[6] == 1)) { // 원하는 족보값에서 정지하기
+    //     quit_requested = 1;
+    // }
+    if (diceCombination[11] != 0) {
+        mvprintw(13, 45, "%d", cnt);
+        quit_requested = 1;
+    }
+    else {
+        cnt += 1;
+    }
     refresh();
 }
 void rollDices() {
@@ -412,7 +482,7 @@ void scene1(char** playerlist, char* button){
     for(int i = 0; i < 5; i++) {
         // mvprintw(tempRow + i, 27, "%d", sortedDice[i]); // 주사위 값 체크하는 문장
         printDice(tempRow + i, diceVal[i]);
-        scoreBoard(playerlist);
+        mainScoreBoard();
         tempRow += 6;
     }
     
