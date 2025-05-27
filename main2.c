@@ -74,7 +74,7 @@ void init_game(){
     initscr();
     noecho();
     curs_set(0);
-    // timeout(100);
+    timeout(100);
     srand(time(NULL));
 
     //초기값 셋팅
@@ -152,6 +152,7 @@ int handlingEntry(int size, char* inputunit){
             return i;
         }
     }
+    // timeout();
     return -1;
 }
 
@@ -235,14 +236,14 @@ void diceSort() {
 }
 void calculDiceVal() {
     diceSort();
-    for (int ci = 0; ci < 13; ci++) { // 족보 값을 저장하는 cardCombination의 인덱스
-        if (ci < 6) { // 1 ~ 6
+    for (int cali = 0; cali < 13; cali++) { // 족보 값을 저장하는 cardCombination의 인덱스
+        if (cali < 6) { // 1 ~ 6
             int numSum = 0;
             for (int i = 0; i < 5; i++) {
-                if (sortedDice[i] == ci + 1) {
-                    numSum += ci + 1;
+                if (sortedDice[i] == cali + 1) {
+                    numSum += cali + 1;
                 }
-                diceCombination[ci] = numSum;
+                diceCombination[cali] = numSum;
             }
         }
         // else if (i == 6) { // 숙제는 플레이어 점수판에 표기
@@ -255,27 +256,29 @@ void calculDiceVal() {
         //         diceCombination[i] = HWScore;
         //     }
         // }
-        else if (ci >= 6) {
-            switch (ci) {
+        else if (cali >= 6) {
+            switch (cali) {
             case 6: // choice
                 int choiceSum = 0;
                 for (int i = 0; i < 5; i++) {
                     choiceSum += sortedDice[i];
                 }
-                diceCombination[ci] = choiceSum;
+                diceCombination[cali] = choiceSum;
                 break;
             case 7: // Four of a kind
+                int FoK = 0;
                 for (int i = 1; i <= 6; i++) {
                     if (diceCnt[i] == 4) {
-                        diceCombination[ci] = i * 4;
+                        FoK = i * 4;
                     }
                 }
+                diceCombination[cali] = FoK;
                 break;
             case 8: // Full House
                 for (int i = 1; i <= 6; i++) {
                     for (int j = 1; j <= 6; j++) {
                         if ((diceCnt[i] == 3 && diceCnt[j] == 2) || (diceCnt[i] == 2 && diceCnt[j] == 3)) {
-                            diceCombination[ci] == i * 3 + j * 2;
+                            diceCombination[cali] == i * 3 + j * 2;
                             break;
                         }
                     }
@@ -402,7 +405,6 @@ void printDice(int row, int diceV) {
 void scene1(char** playerlist, char* button){
     //visual area
     sceneFrame();
-    scoreBoard(playerlist);
 
     int tempRow = dice_row;
     flag = diceVal[0] * diceVal[1] * diceVal[2] * diceVal[3] * diceVal[4];
@@ -410,6 +412,7 @@ void scene1(char** playerlist, char* button){
     for(int i = 0; i < 5; i++) {
         // mvprintw(tempRow + i, 27, "%d", sortedDice[i]); // 주사위 값 체크하는 문장
         printDice(tempRow + i, diceVal[i]);
+        scoreBoard(playerlist);
         tempRow += 6;
     }
     
