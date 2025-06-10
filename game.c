@@ -429,27 +429,11 @@ void calculDiceVal() {
                 break;
             case 9: // SmallStraight
                 int SS = 0;
-                int SSmul;
-                if (diceCnt[1] == 0 || diceCnt[2] == 0) {
-                    SSmul = diceCnt[3];
-                    for (int i = 4; i <= 6; i++) {
-                        SSmul *= diceCnt[i];
+                for (int i = 1; i <= 3; i++) {
+                    if (diceCnt[i] >= 1 && diceCnt[i+1] >= 1 && diceCnt[i+2] >= 1 && diceCnt[i+3] >= 1) {
+                        SS = SSVAL;
+                        break;
                     }
-                }
-                else if (diceCnt[1] == 0 || diceCnt[6] == 0) {
-                    SSmul = diceCnt[2];
-                    for (int i = 3; i <= 5; i++) {
-                        SSmul *= diceCnt[i];
-                    }
-                }
-                else if (diceCnt[5] == 0 || diceCnt[6] == 0) {
-                    SSmul = diceCnt[1];
-                    for (int i = 1; i <= 4; i++) {
-                        SSmul *= diceCnt[i];
-                    }
-                }
-                if (SSmul == 1) {
-                    SS = SSVAL;
                 }
                 diceCombination[cali] = SS;
                 break;
