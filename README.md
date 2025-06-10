@@ -83,12 +83,12 @@
 ## 🎮조작 방법
 - 기본적으로 사용자의 키보드 입력으로 이루어집니다. 
 - 초기 화면
-<a href="https://ibb.co/8g4Tz9X0"><img src="https://i.ibb.co/DfgsGQLt/2025-06-10-203520.png" alt="2025-06-10-203520" border="0"></a>
+ <a href="https://ibb.co/8g4Tz9X0"><img src="https://i.ibb.co/DfgsGQLt/2025-06-10-203520.png" alt="2025-06-10-203520" border="0"></a>
 	 - "W" : 초기 화면 메뉴 선택 커서 이동 - 위
 	- "S" : 초기 화면 메뉴 선택 커서 이동 - 아래
 
 - Local Play를 시작할때 참여하는 플레이어 수 설정 (2 ~ 4 입력)
-<a href="https://ibb.co/S4fMzJJH"><img src="https://i.ibb.co/5gKSP22C/image.png" alt="image" border="0"></a>
+ <a href="https://ibb.co/S4fMzJJH"><img src="https://i.ibb.co/5gKSP22C/image.png" alt="image" border="0"></a>
 - 메인 게임 화면
  <a href="https://ibb.co/F4DT0Zfp"><img src="https://i.ibb.co/hFmzZQn0/image.png" alt="image" border="0"></a>
  	- "G" : 주사위 굴리기 
