@@ -38,7 +38,7 @@
 
   
 
-- gcc -o game game.c -lncurses
+- gcc -o game game.c -lncurses -lminiupnpc
 
   
 
@@ -231,5 +231,13 @@
   
 
 		sudo apt-get install libncurses5-dev libncursesw5-dev
+
+- miniupnpc 라이브러리가 설치되어있어야 합니다. 설치가 필요할 경우:
+
+  
+
+		sudo apt-get install libminiupnpc-dev
+
+
 
  
