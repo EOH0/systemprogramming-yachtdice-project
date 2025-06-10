@@ -88,9 +88,9 @@
 	- "S" : 초기 화면 메뉴 선택 커서 이동 - 아래
 
 - Local Play를 시작할때 참여하는 플레이어 수 설정 (2 ~ 4 입력)
-<a href="https://ibb.co/xq3Qr966"><img src="https://i.ibb.co/5h2VJpLL/2025-06-10-204056.png" alt="2025-06-10-204056" border="0"></a>
+<a href="https://ibb.co/S4fMzJJH"><img src="https://i.ibb.co/5gKSP22C/image.png" alt="image" border="0"></a>
 - 메인 게임 화면
- <a href="https://ibb.co/C3FC7SFk"><img src="https://i.ibb.co/gLCqTcC5/image.png" alt="image" border="0"></a>
+ <a href="https://ibb.co/F4DT0Zfp"><img src="https://i.ibb.co/hFmzZQn0/image.png" alt="image" border="0"></a>
  	- "G" : 주사위 굴리기 
 	 	- life 값에 따라 플레이어 차례 당 3번
 	- "J" : 주사위 고정/해제하기 
@@ -103,17 +103,17 @@
 		- save.txt 파일에 현재 라운드, 차례, 인원 수, 플레이어 각자의 점수판과 족보 선택여부를 저장
 		- 가장 최근의 1개 게임만 저장
 - 주사위 1회 굴렸을 때
-  <a href="https://ibb.co/dw6QvKcG"><img src="https://i.ibb.co/8L2jw8B6/image.png" alt="image" border="0"></a>
+  <a href="https://ibb.co/N2YhpLT1"><img src="https://i.ibb.co/YBj98t0D/image.png" alt="image" border="0"></a>
 - 주사위 고정/해제하기 위해 J 입력 후 주사위 숫자 입력
 	- 주사위 번호가 1 - 5까지의 정수가 아닌 x인 경우 고정된 주사위
- 
-	 <a href="https://ibb.co/YF88hnkZ"><img src="https://i.ibb.co/sdQQqxwH/image.png" alt="image" border="0"></a>
- <a href="https://ibb.co/tM3jXvj0"><img src="https://i.ibb.co/5W2pFSpQ/image.png" alt="image" border="0"></a>
-- 7번 Choice 선택 후 점수 입력
-<a href="https://ibb.co/gbNthgTd"><img src="https://i.ibb.co/PsK10ChM/image.png" alt="image" border="0"></a>
-<a href="https://ibb.co/HTjLb3hH"><img src="https://i.ibb.co/YBx41w0L/image.png" alt="image" border="0"></a>
+    
+     <a href="https://ibb.co/ds69b9cn"><img src="https://i.ibb.co/8n23z3BF/image.png" alt="image" border="0"></a>
+ <a href="https://ibb.co/p6nMMN9X"><img src="https://i.ibb.co/kVMwwzWc/image.png" alt="image" border="0"></a>
+- 9번 FullHouse 선택 후 점수 입력
+<a href="https://ibb.co/cXZJwzCw"><img src="https://i.ibb.co/7NZvQ7RQ/image.png" alt="image" border="0"></a>
+<a href="https://ibb.co/TBbf4Ttp"><img src="https://i.ibb.co/bg20s3Xq/image.png" alt="image" border="0"></a>
 - "I"를 입력해 저장 (초기 화면의 Load Local Play를 통해 불러오기)
-<a href="https://ibb.co/p6hpJ0SY"><img src="https://i.ibb.co/9mZjs87Q/image.png" alt="image" border="0"></a>
+<a href="https://ibb.co/TxZBKsdF"><img src="https://i.ibb.co/mVmCv3gM/image.png" alt="image" border="0"></a>
 
 ## 📜 사용한 헤더 파일
 
