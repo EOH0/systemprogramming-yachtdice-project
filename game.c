@@ -1,4 +1,5 @@
-//gcc -o game game.c -lncurses
+//gcc -o game game.c -lncurses 
+//code version 3
 
 #include <ncurses.h>
 #include <stdlib.h>
@@ -10,6 +11,13 @@
 #include <form.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+/* Communication Related Sections */
+#include <arpa/inet.h>
+#define BACKLOG 10
+#define BUF_SIZE 1024
+
+////////////////////////////
 
 #define WIDTH 40
 #define HEIGHT 20
@@ -41,13 +49,13 @@ int preem_handle = 0;
 //package string list
 char package_list[100][100] = {0}; 
 //dice management
-int diceVal[5] = {0, 0, 0, 0, 0};
-int MaskVal[5] = {0, 0, 0, 0, 0};
-int sortedDice[5];
-int diceCombination[13] = { 0 };
+int diceVal[N_DICE] = {0, 0, 0, 0, 0};
+int MaskVal[N_DICE] = {0, 0, 0, 0, 0};
+int sortedDice[N_DICE];
+int diceCombination[N_CAT] = { 0 };
 int diceCnt[7] = { 0 }; // index 1부터 저장
-int playerCombination[5][13];
-int MaskCombination[5][13] = { { 0 } };
+int playerCombination[5][N_CAT];
+int MaskCombination[5][N_CAT] = { { 0 } };
 int life = 3;
 // player list
 char* playerlist[4] = {"1p", "2p", "3p", "4p"};
@@ -58,26 +66,19 @@ int playerun = 0;
 int turn = 0; // 현재 턴 플레이어 인덱스
 int rnd = 0;
 ////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////
 /*인터럽트 핸들링*/
 //나가기 핸들링
-void quit_check(int signum){
+void quit_check(){
     quit_requested = 1;
 }
 //멈춤 핸들링
-void paused_check(int signum){
+void paused_check(){
     pause_requested = !pause_requested;
 }
-//입력 핸들링
-void handle_input(){
-    int ch = getch();
-    switch(ch){
-        case 'w':
-            if(true) 0;
-            break;
-    }
-}
 //리사이즈 핸들링
-void handle_resize(int sig){
+void handle_resize(){
     endwin();
     refresh();
     clear();
@@ -119,7 +120,7 @@ void init_game(){
     sa.sa_handler = paused_check;
     sigaction(SIGTSTP, &sa, NULL);
 
-}
+}//loadGameState
 void loadGameState() {
     int fd = open("save.txt", O_RDONLY);
     if (fd == -1) {
@@ -127,7 +128,6 @@ void loadGameState() {
     }
 
     char buffer[128];
-    int i = 0, j = 0;
 
     FILE *fp = fdopen(fd, "r");
     if (fp == NULL) {
@@ -318,7 +318,7 @@ void mainscene(){
     );
     refresh();
     
-    menuV(0,4,(char*[]){"New Local Play", "Load Local Play", "Player VS COM", "Network Play"},100 - 45,26);
+    menuV(0,5,(char*[]){"New Local Play", "Load Local Play", "Player VS COM", "Network Play", "Quit"},100 - 45,26);
     if(preem_handle == 1){
         mvprintw(25,4,"The number of players (2~4) :");
         inputV(package_list[0],5,26);
@@ -326,9 +326,13 @@ void mainscene(){
     //entry area
     switch(preem_handle){
         case 0:
-            int a = menuEntry(0, 3);
+            int a = menuEntry(0, 5);
             if(a == 0){
                 preem_handle = 1;
+                playerlist[0] = "1p";
+                playerlist[1] = "2p";
+                playerlist[2] = "3p";
+                playerlist[3] = "4p";
             }
             if(a == 1){
                 struct stat st;
@@ -339,8 +343,13 @@ void mainscene(){
 
                 if (st.st_size != 0) {
                     preem_handle = 0;
+                    playerlist[0] = "1p";
+                    playerlist[1] = "2p";
+                    playerlist[2] = "3p";
+                    playerlist[3] = "4p";
                     loadGameState();
                     scene = 1;
+                    refresh();
                 }
             }
             if(a == 2){
@@ -351,6 +360,14 @@ void mainscene(){
                 playerun = 0;
                 key = 0;
                 playerlist[1] = "COM";
+                refresh();
+            }
+            if(a == 3){
+                preem_handle = 3;
+            }
+            if(a == 4){
+                mvprintw(25,4,"Are you sure you want to quit? (y/n)");
+                quit_check();
             }
             break;
         case 1:
@@ -359,7 +376,13 @@ void mainscene(){
                 preem_handle = 0;
                 scene = 1;
                 gamemode = 0;
+                refresh();
             }
+            break;
+        case 3:
+            scene = 3;
+            preem_handle = 0;
+            refresh();
             break;
     }
 }
@@ -387,16 +410,6 @@ void calculDiceVal() {
                 diceCombination[cali] = numSum;
             }
         }
-        // else if (i == 6) { // 숙제는 플레이어 점수판에 표기
-        //     int HWSum = 0;
-        //     for (int i = 0; i < 5; i++) {
-        //         HWSum += diceCombination[i];
-        //     }
-        //     if (HWSum >= 63) {
-        //         int HWScore = 35;
-        //         diceCombination[i] = HWScore;
-        //     }
-        // }
         else if (cali >= 6) {
             switch (cali) {
             case 6: // choice
@@ -487,7 +500,6 @@ void mainScoreBoard() {
     refresh();
     if (flag) calculDiceVal();
 
-    // mvprintw(3, 5, ": ");
     int x_start = 3, x_end = 20;
     mvprintw(2, x_start,   "1.Ones");
     if(MaskCombination[turn + 1][0] == 0)           
@@ -549,10 +561,6 @@ void mainScoreBoard() {
         mvprintw(13, x_end,   ": %d", diceCombination[11]);
     else
         mvprintw(13, x_end,   ": -");
-    // mvprintw(13, 21, "%d %d %d %d %d %d", diceCnt[1], diceCnt[2], diceCnt[3], diceCnt[4], diceCnt[5], diceCnt[6]); // 주사위 눈금별 주사위 개수
-    // if (diceCombination[10] != 0 || (diceCnt[1] == 1 && diceCnt[2] == 1 && diceCnt[3] == 1 && diceCnt[4] == 1 && diceCnt[5] == 1) || (diceCnt[2] == 1 && diceCnt[3] == 1 && diceCnt[4] == 1 && diceCnt[5] == 1 && diceCnt[6] == 1)) { // 원하는 족보값에서 정지하기
-    //     quit_requested = 1;
-    // }
     refresh();
 }
 void rollDices() {
@@ -763,21 +771,18 @@ int computeScore(int dice[N_DICE], int player_id) {
     return best;
 }
 
-//--------------------------------------------------
-// 2) 남은 리롤로 기대값 계산: 재귀적으로 free dice 순회
-//--------------------------------------------------
 static int  freePos[N_DICE];
 static int  tempDice[N_DICE];
 
 double expectedValue_rec(int idx, int freeCnt, int rollsLeft, int hold_mask, int player_id) {
-    if (idx == freeCnt) {
+    if (idx == freeCnt) {// 처음 freeCnt를 적용시키면 0이 아닐거임.
         // 완성된 tempDice[] 에서 스코어 계산
         return computeScore(tempDice, player_id);
     }
     double sum = 0.0;
     for (int v = 1; v <= DICE_SIDES; v++) {
-        tempDice[ freePos[idx] ] = v;
-        sum += expectedValue_rec(idx+1, freeCnt, rollsLeft, hold_mask, player_id);
+        tempDice[ freePos[idx] ] = v; //idx 인덱스는 바꿀 수 있는 주사위의 인덱스번호 관련 => 바꿀수 있는 주사위의 모든 경우의 수 1~6까지 반복
+        sum += expectedValue_rec(idx+1, freeCnt, rollsLeft, hold_mask, player_id); 
     }
     return sum / DICE_SIDES;
 }
@@ -786,16 +791,13 @@ double expectedValue(int hold_mask, int rollsLeft, int player_id) {
     // 1) mask 비트=1인 주사위는 고정, 나머지는 리롤 대상
     int freeCnt = 0;
     for (int i = 0; i < N_DICE; i++) {
-        tempDice[i] = diceVal[i];
-        if (!((hold_mask>>i)&1)) {
-            freePos[freeCnt++] = i;
+        tempDice[i] = diceVal[i]; // 현재 주사위 상태를 복사
+        if (!((hold_mask>>i)&1)) { // 마찬가지로 mask값의 2진수 역순으로 마스크값 기록. => convention 부여.
+            freePos[freeCnt++] = i; //바꿀 수 있는 주사위 위치를 freePos[]에 저장, freeCnt는 최대 인덱스에서 종료
         }
     }
-    // 2) 더 리롤 기회가 있으면 재귀 호출
     if (rollsLeft > 0) {
         double sum = 0.0;
-        // 모든 free dice를 한번 리롤 → 기대값 재귀적으로 계산
-        // 단순화를 위해 “한 번에 전부 다시 굴린다” 가정
         sum = expectedValue_rec(0, freeCnt, rollsLeft-1, hold_mask, player_id);
         return sum;
     }
@@ -803,15 +805,12 @@ double expectedValue(int hold_mask, int rollsLeft, int player_id) {
     return computeScore(tempDice, player_id);
 }
 
-//--------------------------------------------------
-// 3) 남은 리롤과 마스크로 최적 홀드 결정
-//--------------------------------------------------
 int find_best_mask(int rollsLeft, int player_id) {
     double bestEv = -1.0;
     int bestMask = 0;
-    for (int mask = 0; mask < (1<<N_DICE); mask++) {
-        double ev = expectedValue(mask, rollsLeft, player_id);
-        if (ev > bestEv) {
+    for (int mask = 0; mask < (1<<N_DICE); mask++) { //maskVal은 2진수로 표현 가능 => 2^5의 경우의 수, 그 수 자체가 mask값이 됨.
+        double ev = expectedValue(mask, rollsLeft, player_id); //주사위를 rollsLeft만큼 돌릴 수 있을 때, 해당 mask를 선택했을 때의 득점의 기댓값.
+        if (ev > bestEv) { //현재 기댓값보다 높으면 선택함.
             bestEv = ev;
             bestMask = mask;
         }
@@ -819,21 +818,26 @@ int find_best_mask(int rollsLeft, int player_id) {
     return bestMask;
 }
 
-//--------------------------------------------------
-// 4) AI Section 완전 구현
-//--------------------------------------------------
+
 void AI_section(int playerNum) {
-    // playerNum: 0-based
-    // life: 남은 리롤 횟수 (최대 3)
-    int x_align = 100;
-    int y_align = 33;
+    int x_align = 90;
+    int y_align = 34;
+    rollDices();
+    life--;
+    mvprintw(y_align, x_align, "AI Rolled Dices: ");
+    // 굴린 주사위 상태 출력
+    for (int i = 0; i < N_DICE; i++) {
+        mvprintw(y_align + 1 + i, x_align, "Dice %d: %d (Mask: %d)\n", i+1, diceVal[i], MaskVal[i]);
+    }
+    mvprintw(y_align + 7, x_align, "===============\n");
+    refresh();
+    sleep(2);
     while (life > 0) {
         // 최적 홀드 마스크 계산
         int hold = find_best_mask(life-1, playerNum);
         // MaskVal 갱신
         for (int i = 0; i < N_DICE; i++)
-            MaskVal[i] = ((hold>>i)&1);
-
+            MaskVal[i] = ((hold>>i)&1); //1을 &함으로써 1자리만 보기,  hold를 >> 1씩 해서 MaskVal[i]에 저장
         // 주사위 리롤
         rollDices();
         mvprintw(y_align, x_align, "AI Rolled Dices: ");
@@ -850,24 +854,24 @@ void AI_section(int playerNum) {
     // 최종 점수 기록
     calculDiceVal();  // global diceCombination[] 갱신
 
-    int best_cat = -1, best_score = -1;
+    int best_cat = -1, best_score = -1; //best_cat은 가장 최적 카테고리, best_score는 그 카테고리의 점수
     for (int c = 0; c < N_CAT; c++) {
         if (!MaskCombination[playerNum+1][c] && diceCombination[c] > best_score) {
             best_score = diceCombination[c];
             best_cat = c;
         }
     }
+    //카테고리 잡았으면 카테고리 선택
     if (best_cat >= 0) {
         playerCombination[playerNum+1][best_cat]   = best_score;
         MaskCombination[playerNum+1][best_cat] = 1;
     }
     // 턴 정리
-    extern char announcement[];
-    if (best_cat >= 0) {
+    //extern char announcement[];
+    if (best_cat >= 0) { //유효 카테고리인 경우
         sprintf(announcement, "AI select: No.%d Combination, score : %d", best_cat+1, best_score);
     }
-    extern char package_list[][100];
-    extern int turn, rnd;
+    //턴 종료 및 초기화
     preem_handle = 0;
     for (int i = 0; i < N_DICE; i++) MaskVal[i] = diceVal[i] = 0;
     for (int i = 0; i < N_CAT;  i++) diceCombination[i] = 0;
@@ -876,7 +880,6 @@ void AI_section(int playerNum) {
     life = 3;
 }
 ////
-
 void scene_1(){
     //visual area
     int diceX, diceY;
@@ -944,6 +947,7 @@ void scene_1(){
                 if(rnd == 12){
                     strcpy(announcement, "");
                     scene = 2; // Move to the score scene
+                    refresh();
                 }
             }
             else if(a == 6){
@@ -985,7 +989,6 @@ void scene_1(){
             if(a == 1 && atoi(package_list[1]) >= 1 && atoi(package_list[1]) <= 12 && MaskCombination[turn + 1][atoi(package_list[1]) - 1] == 0) {
                 playerCombination[turn + 1][atoi(package_list[1]) - 1] = diceCombination[atoi(package_list[1]) - 1];
                 MaskCombination[turn + 1][atoi(package_list[1]) - 1] = 1;
-                //printf("%d",diceCombination[atoi(package_list[1]) - 1]);
                 preem_handle = 0; // Reset preem_handle to roll again
                 for(int i = 0; i < 5; i++) {
                     MaskVal[i] = 0; // Reset all masks
@@ -1011,47 +1014,280 @@ void scene_1(){
             }
         break;
         case 3:
-            preem_handle = 0; // Reset preem_handle to roll again
+            preem_handle = 0; // Reset preem_handle
             for(int i = 0; i < 5; i++) {
-                    MaskVal[i] = 0; // Reset all masks
+                MaskVal[i] = 0; // Reset all masks
+            }
+            for(int i = 0; i < 5; i++) {
+                diceVal[i] = 0; // Reset all masks
+            }
+            for(int i = 0; i < 13; i++) {
+                diceCombination[i] = 0; // Reset all masks
+            }
+            for(int i = 0; i < atoi(package_list[0]); i++) {
+                for(int j = 0; j < 13; j++) {
+                    playerCombination[i + 1][j] = 0;
                 }
-                for(int i = 0; i < 5; i++) {
-                    diceVal[i] = 0; // Reset all masks
+            }
+            for(int i = 0; i < atoi(package_list[0]); i++) {
+                for(int j = 0; j < 13; j++) {
+                    MaskCombination[i + 1][j] = 0;
                 }
-                for(int i = 0; i < 13; i++) {
-                    diceCombination[i] = 0; // Reset all masks
-                }
-                for(int i = 0; i < atoi(package_list[0]); i++) {
-                    for(int j = 0; j < 13; j++) {
-                        playerCombination[i + 1][j] = 0;
-                    }
-                }
-                for(int i = 0; i < atoi(package_list[0]); i++) {
-                    for(int j = 0; j < 13; j++) {
-                        MaskCombination[i + 1][j] = 0;
-                    }
-                }
-                rnd = 0;
-                turn = 0;
-                life = 3;
-                strcpy(announcement, "");
-                strcpy(package_list[1], ""); // Reset input cache
+            }
+            rnd = 0;
+            turn = 0;
+            life = 3;
+            strcpy(announcement, "");
+            strcpy(package_list[1], "");
+            strcpy(package_list[0], ""); 
             scene = 0;
+            refresh();
         break;
     }
 }
 
 void scene_2(){
     //visual area
-    playerScoreBoard(atoi(package_list[0]), 0, 0);
+    mvprintw(3, 3, "Game Result :");
+    playerScoreBoard(atoi(package_list[0]), -20, 5);
+    int sum_data[4] = {0};
+    int yi = 20, xi = -20;
+    int x_start = 26, x_end = 53; 
+    for (int i = 1; i <= atoi(package_list[0]); i++) {
+        int sum = 0;
+        for (int j = 0; j < 13; j++) {
+            sum += playerCombination[i][j];
+        }
+        sum_data[i - 1] = sum;
+        mvprintw(yi + 2, xi + (x_start + x_end) / 2 - 4, "sum = %d", sum);
+        for (int y = 1; y <= 3; y++) {
+            for (int x = x_start; x <= x_end; x++) {
+                if ((x == x_start || x == x_end) && (y == 1 || y == 3)) {
+                    mvprintw(yi + y, xi + x, "+");
+                }
+                else if (x == x_start || x == x_end) {
+                    mvprintw(yi + y, xi + x, "|");
+                }
+                else if (y == 1 || y == 3) {
+                    mvprintw(yi + y, xi + x, "-");
+                }
+            }
+        }
+        x_start += 27;
+        x_end += 27;
+    }
+    int rank = 1;
+    for(int i = 0; i < atoi(package_list[0]); i++){
+        if(sum_data[i] > sum_data[rank - 1]){
+            rank = i + 1;
+        }
+        mvprintw(28, 3, "WINNER : %s, Score : %d", playerlist[rank - 1], sum_data[rank - 1]);
+    }
+    mvprintw(29, 3, "Press P to quit the game.");
+    //entry area
+    
+}
+
+void scene_3() {
+    mvprintw(3, 3, "IP :");
+    mvprintw(4, 3, "Port :");
+    mvprintw(5, 3, "Nickname : ");
+    mvprintw(32, 70, "%s", announcement);
+    
+    inputV(package_list[11],8,3);
+    inputV(package_list[12],10,4);
+    inputV(package_list[13],14,5);
+    menuV(10,4,(char*[]){"Change Server Property","Open Server", "Connect to the server","Quit"},3,8);
     //entry area
     switch(preem_handle){
         case 0:
+            int a = menuEntry(10, 4);
+            if(a == 0){
+                preem_handle = 1; // Change Server Property
+                strcpy(announcement, "Please enter the server IP address.");
+            }
+            else if(a == 1){
+                preem_handle = 3; // Open Server
+                strcpy(announcement, "Open the server...");
+            }
+            else if(a == 2){
+                preem_handle = 4; // Connect to the server
+                strcpy(announcement, "Connecting to the server...");
+            }
+            else if(a == 3){
+                scene = 0;
+                refresh();
+                strcpy(announcement, "");
+            }
             break;
         case 1:
+            a = inputEntry(package_list[11]);
+            if(a != -1) {
+                preem_handle = 2;
+                strcpy(announcement, "Please enter the server Port number.");
+            }
             break;
+        case 2:
+            a = inputEntry(package_list[12]);
+            if(a != -1) {
+                preem_handle = 5;
+                strcpy(announcement, "Please enter your own nickname.");
+            }
+            break;
+        case 5:
+            a = inputEntry(package_list[13]);
+            if(a != -1) {
+                preem_handle = 0;
+                strcpy(announcement, "Server property changed.");
+            }
+            break;
+    case 3: {
+        const char *listen_ip = package_list[11];
+        int port = atoi(package_list[12]);
+
+        int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sockfd < 0) { 
+            perror("socket");
+            preem_handle = 0;
+            break; 
+        }
+
+        // 2) SO_BROADCAST 허용
+        int on = 1;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+            perror("setsockopt SO_REUSEADDR"); close(sockfd);
+                preem_handle = 0;
+                break;
+        }
+        if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0) {
+            perror("setsockopt SO_BROADCAST"); 
+            close(sockfd); 
+            preem_handle = 0;
+            break; 
+        }
+
+        // 3) 바인드 (모든 인터페이스, 지정 포트)
+        struct sockaddr_in srv_addr = {0};
+        srv_addr.sin_family = AF_INET;
+        srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        srv_addr.sin_port = htons(port);
+        if (bind(sockfd, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) < 0) {
+            perror("bind"); close(sockfd);
+            preem_handle = 0;
+            break;
+        }
+
+        printf("Broadcast listener on port %d\n", port);
+
+        // 4) 무한 루프: recvfrom → invert → sendto 브로드캐스트
+        while (1) {
+            char buf[BUF_SIZE];
+            struct sockaddr_in cli;
+            socklen_t cli_len = sizeof(cli);
+
+            recvfrom(sockfd, &buf, BUF_SIZE, 0,
+                                (struct sockaddr*)&cli, &cli_len);
+            if (strcmp(buf, "request") == 0) {
+                // 토글
+                char out[BUF_SIZE] = "y";
+
+                // 응답도 브로드캐스트
+                struct sockaddr_in baddr = {0};
+                baddr.sin_family = AF_INET;
+                inet_pton(AF_INET, listen_ip, &baddr.sin_addr);
+                baddr.sin_port = htons(port);
+                if (sendto(sockfd, &out, BUF_SIZE, 0,
+                        (struct sockaddr*)&baddr, sizeof(baddr)) == 0) {
+                    perror("sendto");
+                    close(sockfd);
+                    preem_handle = 0;
+                    break;
+                } else {
+                    sendto(sockfd, &out, BUF_SIZE, 0, (struct sockaddr*)&baddr, sizeof(baddr));
+                    printf("Toggled '%s'→'%s' and broadcasted\n", buf, out);
+                    close(sockfd);
+                    preem_handle = 0;
+                    break;
+                }
+            }
+        }
+        close(sockfd);
+    } break;
+    case 4: {
+        const char *server_ip = package_list[11];
+        int port = atoi(package_list[12]);
+        char send_ch[BUF_SIZE] = "request";
+
+        int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sockfd < 0) { perror("socket"); 
+                preem_handle = 0;
+                break;}
+
+        // 2) SO_BROADCAST 허용
+        int on = 1;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+            perror("setsockopt SO_REUSEADDR"); close(sockfd);
+                preem_handle = 0;
+                break;
+        }
+        if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0) {
+            perror("setsockopt SO_BROADCAST"); close(sockfd);
+                preem_handle = 0;
+                break;
+        }
+
+        // 3) 바인드 (모든 인터페이스, 지정 포트)
+        struct sockaddr_in srv_addr = {0};
+        srv_addr.sin_family = AF_INET;
+        srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        srv_addr.sin_port = htons(port);
+        if (bind(sockfd, (struct sockaddr*)&srv_addr, sizeof(srv_addr)) < 0) {
+            perror("bind"); close(sockfd);
+            preem_handle = 0;
+            break;
+        }
+
+        // 3) 수신 타임아웃 설정
+        struct timeval tv = {5, 0};
+        setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+        // 4) 브로드캐스트 주소 설정
+        struct sockaddr_in baddr = {0};
+        baddr.sin_family = AF_INET;
+        inet_pton(AF_INET, server_ip, &baddr.sin_addr);
+        baddr.sin_port = htons(port);
+
+        // 5) 메시지 전송
+        if (sendto(sockfd, &send_ch, BUF_SIZE, 0,
+                (struct sockaddr*)&baddr, sizeof(baddr)) == 0) {
+            perror("sendto"); close(sockfd); 
+                preem_handle = 0;
+                break;
+        }
+        printf("Broadcasted '%s' to port %d, waiting response...\n", send_ch, port);
+
+        // 6) 응답 수신
+        char recv_ch[BUF_SIZE];
+        socklen_t fromlen = sizeof(srv_addr);
+        recvfrom(sockfd, &recv_ch, BUF_SIZE, 0,
+                            (struct sockaddr*)&srv_addr, &fromlen);
+        if (strcmp(recv_ch, "y") == 0) {
+            printf("Received broadcast response: '%s'\n", recv_ch);
+            strcpy(announcement, "Confirmed.");
+            close(sockfd);
+            preem_handle = 0;
+            break;
+        } else {
+            perror("timeout");
+            close(sockfd);
+            preem_handle = 0;
+            break;
+        }
+        close(sockfd);
+    } break;
     }
 }
+
 ////////////////////////////////////////////////////////
 /* main core process -> There is Scene manage sector */
 int main(){
@@ -1092,21 +1328,20 @@ int main(){
             ////////////////////////////////////////////////////////
             /* Scene manage Sector */
             clear();
+            refresh();
             switch(scene){ //scene manager
                 case 0:
                     mainscene();
                     break;
                 case 1:
-                    refresh();
                     scene_1();
                     break;
                 case 2:
-                    refresh();
                     scene_2();
                     //scene setting
                     break;
                 case 3:
-                    refresh();
+                    scene_3();
                     //scene setting
                     break;
                 default:
