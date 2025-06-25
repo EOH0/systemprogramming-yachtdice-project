@@ -38,7 +38,7 @@
 
   
 
-- gcc -o game game.c -lncurses -lminiupnpc
+- gcc -o game game.c -lncurses
 
   
 
