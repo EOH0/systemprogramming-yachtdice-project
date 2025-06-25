@@ -165,7 +165,8 @@
 
   
   
-  
+- #include <arpa/inet.h>
+
 
 ## ⚙️ 주요 기능 및 구성
 
@@ -174,6 +175,8 @@
 ### ncurses 기반 터미널 UI
 
 - 커서 제어, 컬러 설정, 사용자 입력 처리 등
+
+- 비동기적 입력 처리를 ncurses로 구현.
 
   
 
@@ -232,12 +235,9 @@
 
 		sudo apt-get install libncurses5-dev libncursesw5-dev
 
-- miniupnpc 라이브러리가 설치되어있어야 합니다. 설치가 필요할 경우:
 
-  
 
-		sudo apt-get install libminiupnpc-dev
-
+- Network play의 경우, subnet mask를 통한 broadcast로 멀티플레이를 구현하려 했으나, 클라이언트에서 서버로의 통신은 가능하나, 서버에서 다시 클라이언트로 응답처리가 잘 안되어 절반만 구현되었습니다.
 
 
  
